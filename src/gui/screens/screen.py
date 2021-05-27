@@ -5,6 +5,9 @@ from ..core import update
 from ..components.modal import Modal
 from ..components.battery import Battery
 
+import gc
+import micropython
+
 class Screen(lv.obj):
     network = "main"
     COLORS = {
@@ -35,6 +38,14 @@ class Screen(lv.obj):
             self.topbar.set_style(s)
             self.topbar.set_size(HOR_RES, 5)
             self.topbar.set_pos(0, 0)
+
+        self.memlbl = lv.label(self)
+        self.memlbl.set_style(0, styles['hint'])
+        m = gc.mem_alloc()
+        mt = gc.mem_alloc() + gc.mem_free()
+        s = micropython.stack_use()
+        self.memlbl.set_text("mem: %d (%.2f) stack: %d (%.2f)" % (m, 100*m/mt, s, 100*s/15360))
+        self.memlbl.set_pos(10, 3)
 
     def release(self):
         self.waiting = False

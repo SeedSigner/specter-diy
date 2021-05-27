@@ -63,10 +63,10 @@ def get_address(vout, psbtout, network):
             return liquid_address(vout.script_pubkey, bpub, network)
     # finally just return bitcoin address or unconfidential
     try:
-        return vout.script_pubkey.address(NETWORKS[network])
-    except:
+        return vout.script_pubkey.address(network)
+    except Exception as e:
         # if script doesn't have address representation
-        return hexlify(vout.script_pubkey.data)
+        return hexlify(vout.script_pubkey.data).decode()
 
 class WalletManager(BaseApp):
     """
@@ -419,7 +419,7 @@ class WalletManager(BaseApp):
                     gc.collect()
                 psbt.tx._hash_outputs_rangeproofs = h.digest()
 
-            self.show_loader(title="Signing now..." % i)
+            self.show_loader(title="Signing now...")
             sigsStart = 0
             for i, inp in enumerate(psbt.inputs):
                 sigsStart += len(list(inp.partial_sigs.keys()))
@@ -739,7 +739,8 @@ class WalletManager(BaseApp):
             for w in wallets:
                 if w is None:
                     continue
-                if w.owns(psbt.tx.vout[i], out.bip32_derivations, out.witness_script or out.redeem_script, ec.PublicKey.parse(out.blinding_pubkey)):
+                if out.blinding_pubkey and w.owns(psbt.tx.vout[i],
+                        out.bip32_derivations, out.witness_script or out.redeem_script, ec.PublicKey.parse(out.blinding_pubkey)):
                     meta["outputs"][i]["change"] = True
                     meta["outputs"][i]["label"] = w.name
                     break
